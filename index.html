@@ -1,47 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EmoAI – Intelligent Campus Wellbeing</title>
-    <link rel="stylesheet" href="/src/styles.css" />
+    <title>EmoAI</title>
+
+    <!-- Optional: puedes cambiar el color de la pestaña del navegador -->
+    <meta name="theme-color" content="#0a0a2a" />
+
+    <!-- Optional: descripción para SEO -->
+    <meta
+      name="description"
+      content="EmoAI – Intelligent Emotional Wellbeing & Conflict Prevention System"
+    />
+
+    <!-- Fuente (opcional, moderna y legible) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <header>
-      <h1>🌐 EmoAI</h1>
-      <p>Intelligent Emotional Wellbeing & Conflict Prevention System</p>
-    </header>
-
-    <main>
-      <section class="intro">
-        <h2>What is EmoAI?</h2>
-        <p>
-          EmoAI uses AI-powered emotion recognition and predictive analytics to
-          promote peace, mental health, and coexistence across university
-          campuses.
-        </p>
-      </section>
-
-      <section class="features">
-        <h2>Main Features</h2>
-        <ul>
-          <li>🧠 Real-time emotional detection through facial analysis</li>
-          <li>📊 Predictive conflict mapping using AI algorithms</li>
-          <li>🤝 Chatbot support for emotional regulation</li>
-          <li>🎮 Gamified wellbeing app for students</li>
-        </ul>
-      </section>
-
-      <section id="ai-status">
-        <h2>System Status</h2>
-        <div id="status"></div>
-      </section>
-    </main>
-
-    <footer>
-      <p>© 2025 EmoAI – Smart Emotional Intelligence Project</p>
-    </footer>
-
-    <script type="module" src="/src/main.ts"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
