@@ -1,10 +1,15 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { getAIStatus } from "./app";
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const statusDiv = document.getElementById("status")!;
+
+function renderStatus() {
+  const { active, emotion } = getAIStatus();
+  statusDiv.innerHTML = `
+    <p><strong>System Active:</strong> ${active ? "✅ Online" : "❌ Offline"}</p>
+    <p><strong>Detected Emotion:</strong> ${emotion}</p>
+  `;
+}
+
+// Actualiza cada 3 segundos
+setInterval(renderStatus, 3000);
+renderStatus();
