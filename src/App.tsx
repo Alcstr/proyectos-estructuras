@@ -4,7 +4,7 @@ import "./styles.css";
 const emotions = ["Calm", "Happy", "Stressed", "Angry", "Neutral"];
 
 export default function App() {
-  const [active, setActive] = useState(true);
+  const [active] = useState(false);
   const [emotion, setEmotion] = useState("Neutral");
 
   useEffect(() => {
