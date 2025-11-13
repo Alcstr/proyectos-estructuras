@@ -1,4 +1,5 @@
 import React from "react";
+import { useAccessibility } from "../AccessibilityContext";
 
 interface NavbarProps {
   isAuthenticated: boolean;
@@ -11,6 +12,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   userName,
   onLogout,
 }) => {
+  const { accessibleMode, toggleAccessibleMode } = useAccessibility();
+
   return (
     <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-20">
       <nav className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -32,9 +35,15 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="text-xs px-3 py-1.5 rounded-full border border-slate-700 text-slate-200 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onClick={toggleAccessibleMode}
+            className={`text-xs px-3 py-1.5 rounded-full border font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500
+              ${
+                accessibleMode
+                  ? "border-yellow-400 bg-yellow-500/20 text-yellow-200"
+                  : "border-slate-700 text-slate-200 hover:bg-slate-800"
+              }`}
           >
-            Modo accesible
+            {accessibleMode ? "Modo accesible: ON" : "Modo accesible"}
           </button>
 
           {isAuthenticated ? (

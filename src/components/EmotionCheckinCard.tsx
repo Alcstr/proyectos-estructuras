@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createCheckin } from "../api";
 
 const moodOptions = [
   { label: "Muy bien", emoji: "😁", value: "muy_bien" },
@@ -8,16 +9,38 @@ const moodOptions = [
   { label: "Ansioso/a", emoji: "😰", value: "ansioso" },
 ];
 
-export const EmotionCheckinCard: React.FC = () => {
+interface EmotionCheckinCardProps {
+  token: string;
+  onCheckinSaved: () => void;
+}
+
+export const EmotionCheckinCard: React.FC<EmotionCheckinCardProps> = ({
+  token,
+  onCheckinSaved,
+}) => {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Aquí más adelante enviaremos esto al backend
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    if (!selectedMood) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      await createCheckin(token, selectedMood, note);
+      setSubmitted(true);
+      setNote("");
+      onCheckinSaved();
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (err: any) {
+      setError(err.message || "Error al guardar el check-in");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -63,18 +86,19 @@ export const EmotionCheckinCard: React.FC = () => {
           />
         </div>
 
+        {error && <p className="text-[11px] text-red-400">{error}</p>}
+
         <button
           type="submit"
-          disabled={!selectedMood}
+          disabled={!selectedMood || loading}
           className="rounded-lg bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-400 hover:bg-emerald-600 text-white text-sm font-medium px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
         >
-          Guardar check-in
+          {loading ? "Guardando..." : "Guardar check-in"}
         </button>
 
-        {submitted && (
+        {submitted && !error && (
           <p className="text-[11px] text-emerald-300">
-            ✅ ¡Check-in guardado (simulado)! Más adelante lo enviaremos al servidor y al
-            modelo de IA.
+            ✅ ¡Check-in guardado correctamente!
           </p>
         )}
       </form>

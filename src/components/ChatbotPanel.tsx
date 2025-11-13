@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { sendChatMessage } from "../api";
 
 interface Message {
   id: number;
@@ -6,7 +7,11 @@ interface Message {
   text: string;
 }
 
-export const ChatbotPanel: React.FC = () => {
+interface ChatbotPanelProps {
+  token: string;
+}
+
+export const ChatbotPanel: React.FC<ChatbotPanelProps> = ({ token }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -15,45 +20,51 @@ export const ChatbotPanel: React.FC = () => {
     },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSend(e: React.FormEvent) {
+  async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
+    const text = input.trim();
     const userMessage: Message = {
       id: Date.now(),
       from: "user",
-      text: input.trim(),
+      text,
     };
 
     setMessages((prev) => [...prev, userMessage]);
-
-    // Respuesta simulada: más adelante aquí llamaremos a la API de IA
-    const botMessage: Message = {
-      id: Date.now() + 1,
-      from: "bot",
-      text:
-        "Gracias por compartir eso. Recuerda que es válido sentirte así. " +
-        "¿Te gustaría que hagamos un ejercicio de respiración o que te dé algunas recomendaciones?",
-    };
-
-    setTimeout(() => {
-      setMessages((prev) => [...prev, botMessage]);
-    }, 400);
-
     setInput("");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { reply } = await sendChatMessage(token, text);
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        from: "bot",
+        text: reply,
+      };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Error al contactar al chatbot");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 md:p-5 flex flex-col h-[360px]">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 md:p-5 flex flex-col h-[420px]">
       <h2 className="text-lg font-semibold mb-2">Chatbot terapéutico</h2>
       <p className="text-xs text-slate-300 mb-3">
-        Conversación privada y confidencial. En la versión completa, este chatbot usará IA avanzada
-        para darte respuestas más personalizadas.
+        Conversación privada y confidencial. Este chatbot está diseñado para acompañarte
+        emocionalmente, no para sustituir ayuda profesional.
       </p>
 
       <div
-        className="flex-1 overflow-y-auto space-y-2 pr-1"
+        className="flex-1 overflow-y-auto space-y-2 pr-2 chat-scroll"
         aria-label="Historial de chat"
       >
         {messages.map((msg) => (
@@ -76,6 +87,12 @@ export const ChatbotPanel: React.FC = () => {
         ))}
       </div>
 
+      {error && (
+        <p className="text-[11px] text-red-400 mt-1">
+          {error}
+        </p>
+      )}
+
       <form
         onSubmit={handleSend}
         className="mt-3 flex items-center gap-2"
@@ -90,9 +107,10 @@ export const ChatbotPanel: React.FC = () => {
         />
         <button
           type="submit"
-          className="rounded-full bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium px-4 py-2"
+          disabled={loading}
+          className="rounded-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-700 text-white text-xs font-medium px-4 py-2"
         >
-          Enviar
+          {loading ? "Enviando..." : "Enviar"}
         </button>
       </form>
     </div>
