@@ -12,7 +12,11 @@ export default defineConfig([
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
+<<<<<<< HEAD
       reactHooks.configs.flat.recommended,
+=======
+      reactHooks.configs['recommended-latest'],
+>>>>>>> 022c6481d8ca54b3677cc95f30c93e7af7868f6b
       reactRefresh.configs.vite,
     ],
     languageOptions: {
