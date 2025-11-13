@@ -20,7 +20,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1> EmoAI</h1>
+        <h1> EMOAI</h1>
         <p>Intelligent Emotional Wellbeing & Conflict Prevention System</p>
       </header>
 
@@ -38,7 +38,7 @@ export default function App() {
       </main>
 
       <footer>
-        <p>© 2025 EmoAI – Smart Emotional Intelligence Project</p>
+        <p>© 2025 EMOAI – Smart Emotional Intelligence Project</p>
       </footer>
     </div>
   );
