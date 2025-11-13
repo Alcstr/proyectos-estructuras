@@ -1,77 +1,50 @@
-<<<<<<< HEAD
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
   @apply bg-slate-950 text-slate-50;
-=======
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Scrollbar personalizada para el chat */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 #020617;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+.chat-scroll::-webkit-scrollbar {
+  width: 8px;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.chat-scroll::-webkit-scrollbar-track {
+  background: #020617;
+  border-radius: 9999px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 9999px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
->>>>>>> 022c6481d8ca54b3677cc95f30c93e7af7868f6b
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
+}
+
+/* Modo accesible: aumenta un poco la fuente y mejora el foco */
+[data-accessible="true"] {
+  font-size: 17px;
+}
+
+[data-accessible="true"] button,
+[data-accessible="true"] input,
+[data-accessible="true"] textarea {
+  outline-width: 2px;
+  outline-style: solid;
+  outline-color: transparent;
+}
+
+[data-accessible="true"] button:focus,
+[data-accessible="true"] input:focus,
+[data-accessible="true"] textarea:focus {
+  outline-color: #facc15;
 }
