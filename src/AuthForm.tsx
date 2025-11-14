@@ -5,8 +5,8 @@ import {
   requestPasswordReset,
   resetPassword,
   verifyTwoFactor,
-  LoginResponse,
-} from "./api";
+  LoginResponse
+} from "../api";
 
 
 
