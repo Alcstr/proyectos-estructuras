@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { sendChatMessage } from "./api";
+import { sendChatMessage } from "../api";
+import { useAccessibility } from "../AccessibilityContext";
 
 interface Message {
   id: number;
@@ -22,6 +23,8 @@ export const ChatbotPanel: React.FC<ChatbotPanelProps> = ({ token }) => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { speak } = useAccessibility();
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +50,7 @@ export const ChatbotPanel: React.FC<ChatbotPanelProps> = ({ token }) => {
         text: reply,
       };
       setMessages((prev) => [...prev, botMessage]);
+      speak(reply); // aquí se activa la lectura en voz alta si está habilitada
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Error al contactar al chatbot");

@@ -30,21 +30,74 @@ body {
   background: #818cf8;
 }
 
-/* Modo accesible: aumenta un poco la fuente y mejora el foco */
-[data-accessible="true"] {
-  font-size: 17px;
+/* ===========================
+   ACCESIBILIDAD
+   =========================== */
+
+/* Texto grande */
+[data-ac-large-text="true"] {
+  font-size: 18px;
 }
 
-[data-accessible="true"] button,
-[data-accessible="true"] input,
-[data-accessible="true"] textarea {
+/* Alto contraste básico */
+[data-ac-high-contrast="true"] {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+[data-ac-high-contrast="true"] body {
+  background-color: #000000;
+}
+
+/* Forzamos fondos más oscuros/claros para tarjetas */
+[data-ac-high-contrast="true"] .bg-slate-900\/80,
+[data-ac-high-contrast="true"] .bg-slate-900\/70,
+[data-ac-high-contrast="true"] .bg-slate-800,
+[data-ac-high-contrast="true"] .bg-slate-950,
+[data-ac-high-contrast="true"] .bg-slate-900 {
+  background-color: #000000 !important;
+}
+
+[data-ac-high-contrast="true"] .border-slate-800,
+[data-ac-high-contrast="true"] .border-slate-700 {
+  border-color: #ffffff !important;
+}
+
+[data-ac-high-contrast="true"] .text-slate-300,
+[data-ac-high-contrast="true"] .text-slate-400,
+[data-ac-high-contrast="true"] .text-slate-500 {
+  color: #ffffff !important;
+}
+
+/* Botones con borde fuerte en alto contraste */
+[data-ac-high-contrast="true"] button {
+  border-width: 2px !important;
+}
+
+/* Enfoque / focus visible mejorado */
+[data-ac-focus-outline="true"] button,
+[data-ac-focus-outline="true"] input,
+[data-ac-focus-outline="true"] textarea {
   outline-width: 2px;
   outline-style: solid;
   outline-color: transparent;
 }
 
-[data-accessible="true"] button:focus,
-[data-accessible="true"] input:focus,
-[data-accessible="true"] textarea:focus {
+[data-ac-focus-outline="true"] button:focus,
+[data-ac-focus-outline="true"] input:focus,
+[data-ac-focus-outline="true"] textarea:focus {
   outline-color: #facc15;
+}
+
+/* Reducir movimiento: podrías usar esto si luego agregas animaciones */
+[data-ac-reduce-motion="true"] * {
+  scroll-behavior: auto !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Cuando cualquier modo accesible esté activo */
+[data-accessible="true"] {
+  /* Puedes añadir estilos globales si quieres */
 }
