@@ -4,6 +4,8 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  institution?: string;
+  avatarUrl?: string | null;
 }
 
 export interface Stats {
@@ -13,15 +15,29 @@ export interface Stats {
   streak: number;
 }
 
+export interface LoginSuccess {
+  token: string;
+  user: User;
+}
+
+export interface Login2FARequired {
+  requires2fa: true;
+  message: string;
+  code?: string; // solo para demo
+}
+
+export type LoginResponse = LoginSuccess | Login2FARequired;
+
 export async function register(
   name: string,
   email: string,
-  password: string
-): Promise<{ token: string; user: User }> {
+  password: string,
+  institution?: string
+): Promise<LoginSuccess> {
   const res = await fetch(`${API_URL}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, institution }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al registrar");
@@ -31,7 +47,7 @@ export async function register(
 export async function login(
   email: string,
   password: string
-): Promise<{ token: string; user: User }> {
+): Promise<LoginResponse> {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -39,6 +55,49 @@ export async function login(
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al iniciar sesión");
+  return data;
+}
+
+export async function verifyTwoFactor(
+  email: string,
+  code: string
+): Promise<LoginSuccess> {
+  const res = await fetch(`${API_URL}/auth/verify-2fa`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Error al verificar código");
+  return data;
+}
+
+export async function requestPasswordReset(email: string): Promise<{
+  message: string;
+  code?: string;
+}> {
+  const res = await fetch(`${API_URL}/auth/request-password-reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Error al solicitar recuperación");
+  return data;
+}
+
+export async function resetPassword(
+  email: string,
+  code: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  const res = await fetch(`${API_URL}/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Error al cambiar contraseña");
   return data;
 }
 
