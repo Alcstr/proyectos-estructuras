@@ -4,7 +4,7 @@ import { AuthForm } from "./AuthForm";
 import { EmotionCheckinCard } from "./EmotionCheckinCard";
 import { ChatbotPanel } from "./ChatbotPanel";
 import { StatCard } from "./StatCard";
-import { fetchMe, Stats, User } from "./api";
+import { fetchMe, Stats, User } from "./Api";
 
 
 const App: React.FC = () => {
