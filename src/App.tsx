@@ -6,6 +6,7 @@ import { ChatbotPanel } from "./ChatbotPanel";
 import { StatCard } from "./StatCard";
 import { fetchMe, Stats, User } from "./api";
 
+
 const App: React.FC = () => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);

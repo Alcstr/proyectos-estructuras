@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { sendChatMessage } from "../api";
-import { useAccessibility } from "../AccessibilityContext";
+import { sendChatMessage } from "./api";
+import { useAccessibility } from "./AccessibilityContext";
+
 
 interface Message {
   id: number;
