@@ -1,5 +1,7 @@
 const API_URL = "http://localhost:4000";
 
+/* ===== Tipos comunes ===== */
+
 export interface User {
   id: number;
   name: string;
@@ -15,6 +17,8 @@ export interface Stats {
   streak: number;
 }
 
+/* ===== Tipos para login / 2FA ===== */
+
 export interface LoginSuccess {
   token: string;
   user: User;
@@ -23,10 +27,12 @@ export interface LoginSuccess {
 export interface Login2FARequired {
   requires2fa: true;
   message: string;
-  code?: string; // solo para demo
+  code?: string; // solo para la demo
 }
 
 export type LoginResponse = LoginSuccess | Login2FARequired;
+
+/* ===== Auth básica ===== */
 
 export async function register(
   name: string,
@@ -39,6 +45,7 @@ export async function register(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password, institution }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al registrar");
   return data;
@@ -53,6 +60,7 @@ export async function login(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al iniciar sesión");
   return data;
@@ -67,10 +75,13 @@ export async function verifyTwoFactor(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al verificar código");
   return data;
 }
+
+/* ===== Recuperar contraseña ===== */
 
 export async function requestPasswordReset(email: string): Promise<{
   message: string;
@@ -81,6 +92,7 @@ export async function requestPasswordReset(email: string): Promise<{
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al solicitar recuperación");
   return data;
@@ -96,10 +108,13 @@ export async function resetPassword(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, code, newPassword }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al cambiar contraseña");
   return data;
 }
+
+/* ===== Perfil + stats ===== */
 
 export async function fetchMe(
   token: string
@@ -107,12 +122,19 @@ export async function fetchMe(
   const res = await fetch(`${API_URL}/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al obtener perfil");
   return data;
 }
 
-export async function createCheckin(token: string, mood: string, note: string) {
+/* ===== Check-ins ===== */
+
+export async function createCheckin(
+  token: string,
+  mood: string,
+  note: string
+) {
   const res = await fetch(`${API_URL}/checkins`, {
     method: "POST",
     headers: {
@@ -121,10 +143,13 @@ export async function createCheckin(token: string, mood: string, note: string) {
     },
     body: JSON.stringify({ mood, note }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error al guardar check-in");
   return data;
 }
+
+/* ===== Chatbot ===== */
 
 export async function sendChatMessage(token: string, text: string) {
   const res = await fetch(`${API_URL}/chat`, {
@@ -135,6 +160,7 @@ export async function sendChatMessage(token: string, text: string) {
     },
     body: JSON.stringify({ text }),
   });
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "Error en el chatbot");
   return data as { reply: string };
