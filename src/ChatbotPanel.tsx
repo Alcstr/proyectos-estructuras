@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { sendChatMessage } from "../api";
+import { sendChatMessage } from "./api";
 
 interface Message {
   id: number;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createCheckin } from "../api";
+import { createCheckin } from "./api";
 
 const moodOptions = [
   { label: "Muy bien", emoji: "😁", value: "muy_bien" },

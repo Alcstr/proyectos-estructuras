@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Navbar } from "./components/Navbar";
-import { AuthForm } from "./components/AuthForm";
-import { EmotionCheckinCard } from "./components/EmotionCheckinCard";
-import { ChatbotPanel } from "./components/ChatbotPanel";
-import { StatCard } from "./components/StatCard";
+import { Navbar } from "./Navbar";
+import { AuthForm } from "./AuthForm";
+import { EmotionCheckinCard } from "./EmotionCheckinCard";
+import { ChatbotPanel } from "./ChatbotPanel";
+import { StatCard } from "./StatCard";
 import { fetchMe, Stats, User } from "./api";
 
 const App: React.FC = () => {
@@ -99,7 +99,11 @@ const App: React.FC = () => {
               <StatCard
                 title="Check-ins este mes"
                 value={stats ? String(stats.totalCheckins) : "0"}
-                subtitle={stats && stats.totalCheckins > 0 ? "Excelente constancia 💪" : "Empieza registrando tu ánimo"}
+                subtitle={
+                  stats && stats.totalCheckins > 0
+                    ? "Excelente constancia 💪"
+                    : "Empieza registrando tu ánimo"
+                }
               />
               <StatCard
                 title="Estado promedio"

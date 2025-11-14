@@ -1,5 +1,5 @@
 import React from "react";
-import { useAccessibility } from "../AccessibilityContext";
+import { useAccessibility } from "./AccessibilityContext";
 
 interface NavbarProps {
   isAuthenticated: boolean;
