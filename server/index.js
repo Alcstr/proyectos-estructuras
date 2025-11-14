@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 
-// Ajusta el origin si usas otro puerto en el frontend
+// Ajusta el origin cuando lo subas a producción (Vercel)
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -19,10 +19,11 @@ const PORT = 4000;
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-demo";
 
 // "Base de datos" en memoria (solo demo)
-const users = []; // { id, name, email, passwordHash }
+// En producción usarías MongoDB/Postgres, etc.
+const users = []; // { id, name, email, passwordHash, institution, avatarUrl, twoFactorEnabled, twoFactorCode, twoFactorCodeExpires, resetCode, resetCodeExpires }
 const checkins = []; // { id, userId, mood, note, createdAt }
 
-// Crea un token JWT
+// Utilidades
 function createToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name },
@@ -31,7 +32,10 @@ function createToken(user) {
   );
 }
 
-// Middleware de autenticación
+function generateCode() {
+  return String(Math.floor(100000 + Math.random() * 900000)); // 6 dígitos
+}
+
 function authMiddleware(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Bearer ")) {
@@ -47,9 +51,13 @@ function authMiddleware(req, res, next) {
   }
 }
 
+/* ==========================
+   AUTENTICACIÓN BÁSICA
+   ========================== */
+
 // Registro
 app.post("/auth/register", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, institution } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email y contraseña son obligatorios" });
@@ -66,19 +74,33 @@ app.post("/auth/register", async (req, res) => {
     name: name || "Estudiante EmoAI",
     email,
     passwordHash,
+    institution: institution || "",
+    avatarUrl: null,
+    twoFactorEnabled: false,
+    twoFactorCode: null,
+    twoFactorCodeExpires: null,
+    resetCode: null,
+    resetCodeExpires: null,
   };
   users.push(newUser);
 
   const token = createToken(newUser);
   res.json({
     token,
-    user: { id: newUser.id, name: newUser.name, email: newUser.email },
+    user: {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      institution: newUser.institution,
+      avatarUrl: newUser.avatarUrl,
+    },
   });
 });
 
-// Login
+// Login (puede requerir 2FA)
 app.post("/auth/login", async (req, res) => {
   const { email, password } = req.body;
+
   const user = users.find((u) => u.email === email);
   if (!user) {
     return res.status(400).json({ error: "Credenciales inválidas" });
@@ -89,16 +111,133 @@ app.post("/auth/login", async (req, res) => {
     return res.status(400).json({ error: "Credenciales inválidas" });
   }
 
-  const token = createToken(user);
-  res.json({
-    token,
-    user: { id: user.id, name: user.name, email: user.email },
+  // Si NO tiene 2FA activo → login normal
+  if (!user.twoFactorEnabled) {
+    const token = createToken(user);
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        institution: user.institution,
+        avatarUrl: user.avatarUrl,
+      },
+    });
+  }
+
+  // Si tiene 2FA activo → generar código y pedir verificación
+  const code = generateCode();
+  user.twoFactorCode = code;
+  user.twoFactorCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+  // En producción se enviaría por correo/SMS. Aquí lo devolvemos para demo.
+  return res.json({
+    requires2fa: true,
+    message:
+      "Se ha enviado un código de verificación a tu correo (en esta demo se muestra directamente).",
+    code, // ⚠️ solo para demo académica
   });
 });
 
-// Perfil + estadísticas
+// Verificar 2FA
+app.post("/auth/verify-2fa", (req, res) => {
+  const { email, code } = req.body;
+  const user = users.find((u) => u.email === email);
+  if (!user || !user.twoFactorCode) {
+    return res.status(400).json({ error: "Código inválido" });
+  }
+
+  if (user.twoFactorCode !== code) {
+    return res.status(400).json({ error: "Código incorrecto" });
+  }
+
+  if (user.twoFactorCodeExpires && user.twoFactorCodeExpires < new Date()) {
+    return res.status(400).json({ error: "El código ha expirado" });
+  }
+
+  // Limpiar código
+  user.twoFactorCode = null;
+  user.twoFactorCodeExpires = null;
+
+  const token = createToken(user);
+  return res.json({
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      institution: user.institution,
+      avatarUrl: user.avatarUrl,
+    },
+  });
+});
+
+/* ==========================
+   OLVIDÉ MI CONTRASEÑA
+   ========================== */
+
+// Solicitar código de reseteo
+app.post("/auth/request-password-reset", (req, res) => {
+  const { email } = req.body;
+  const user = users.find((u) => u.email === email);
+
+  // Por seguridad, respondemos lo mismo exista o no
+  if (!user) {
+    return res.json({
+      message:
+        "Si el correo está registrado, se ha enviado un código de recuperación.",
+    });
+  }
+
+  const code = generateCode();
+  user.resetCode = code;
+  user.resetCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+  // En prod se enviaría por correo; aquí lo devolvemos para demo
+  return res.json({
+    message:
+      "Se ha generado un código de recuperación (en una app real se enviaría a tu correo).",
+    code, // ⚠️ solo para la demo
+  });
+});
+
+// Resetear contraseña con código
+app.post("/auth/reset-password", async (req, res) => {
+  const { email, code, newPassword } = req.body;
+  const user = users.find((u) => u.email === email);
+
+  if (!user || !user.resetCode) {
+    return res.status(400).json({ error: "Datos de recuperación inválidos" });
+  }
+
+  if (user.resetCode !== code) {
+    return res.status(400).json({ error: "Código incorrecto" });
+  }
+
+  if (user.resetCodeExpires && user.resetCodeExpires < new Date()) {
+    return res.status(400).json({ error: "El código ha expirado" });
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  user.passwordHash = passwordHash;
+  user.resetCode = null;
+  user.resetCodeExpires = null;
+
+  return res.json({ message: "Contraseña actualizada correctamente." });
+});
+
+/* ==========================
+   PERFIL + STATS
+   ========================== */
+
 app.get("/me", authMiddleware, (req, res) => {
-  const userCheckins = checkins.filter((c) => c.userId === req.user.id);
+  const user = users.find((u) => u.id === req.user.id);
+  if (!user) {
+    return res.status(404).json({ error: "Usuario no encontrado" });
+  }
+
+  const userCheckins = checkins.filter((c) => c.userId === user.id);
   const totalCheckins = userCheckins.length;
 
   const last7days = userCheckins.filter(
@@ -107,18 +246,27 @@ app.get("/me", authMiddleware, (req, res) => {
 
   const stats = {
     totalCheckins,
-    averageMood: "😊", // podrías calcular algo real según los moods
+    averageMood: "😊", // podrías calcularlo real más adelante
     chatbotSessions: last7days.length > 0 ? 8 : 0, // demo
     streak: totalCheckins > 0 ? 5 : 0, // demo
   };
 
   res.json({
-    user: { id: req.user.id, name: req.user.name, email: req.user.email },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      institution: user.institution,
+      avatarUrl: user.avatarUrl,
+    },
     stats,
   });
 });
 
-// Crear check-in
+/* ==========================
+   CHECK-INS
+   ========================== */
+
 app.post("/checkins", authMiddleware, (req, res) => {
   const { mood, note } = req.body;
   if (!mood) {
@@ -137,13 +285,15 @@ app.post("/checkins", authMiddleware, (req, res) => {
   res.status(201).json({ checkin: newCheckin });
 });
 
-// Obtener check-ins del usuario (por si luego los quieres listar)
 app.get("/checkins", authMiddleware, (req, res) => {
   const userCheckins = checkins.filter((c) => c.userId === req.user.id);
   res.json({ checkins: userCheckins });
 });
 
-// Chatbot muy simple (sin API externa, pero con lógica empática básica)
+/* ==========================
+   CHATBOT SIMPLE
+   ========================== */
+
 app.post("/chat", authMiddleware, (req, res) => {
   const { text } = req.body;
   if (!text || typeof text !== "string") {
