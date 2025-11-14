@@ -4,9 +4,9 @@ import {
   register,
   requestPasswordReset,
   resetPassword,
-  verifyTwoFactor,
-  LoginResponse
-} from "../api";
+  verifyTwoFactor
+} from "./Api";
+import type { LoginResponse, LoginSuccess } from "./Api";
 
 
 
@@ -61,7 +61,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onAuthSuccess }) => {
           setInfo(res.message);
           if (res.code) setDemoCode(res.code); // visible solo en la demo
         } else {
-          onAuthSuccess(res.token);
+          onAuthSuccess((res as LoginSuccess).token);
         }
         return;
       }
