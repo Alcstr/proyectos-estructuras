@@ -18,6 +18,17 @@ const JWT_SECRET = process.env.JWT_SECRET || "super-secret-dev";
 // Si no, permite todo (*) para pruebas.
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
 
+app.get("/", (req, res) => {
+  res.send("Backend EmoAI funcionando correctamente ✔️");
+});
+
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+
+
+
 app.use(
   cors({
     origin: CORS_ORIGIN,
