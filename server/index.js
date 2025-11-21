@@ -1,63 +1,41 @@
 // server/index.js
+
 require("dotenv").config();
 const express = require("express");
+const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const app = express();
 
-/* ==========================
-   CONFIGURACIÓN BÁSICA
-   ========================== */
-
+// ===== Config básica =====
 const PORT = process.env.PORT || 4000;
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-dev";
+const JWT_SECRET = process.env.JWT_SECRET || "emoai-super-secreto";
 
-// Si pones CORS_ORIGIN en Render, se usará eso.
-// Si no, permite todo (*) para pruebas.
-const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
-
-app.get("/", (req, res) => {
-  res.send("Backend EmoAI funcionando correctamente ✔️");
-});
-
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
-
-
-
-
+// CORS: permite llamadas desde tu frontend
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-/* Rutas de prueba / salud */
-app.get("/", (req, res) => {
-  res.send("EmoAI API funcionando ✅");
-});
-
+// Endpoint de salud para comprobar que Render está ok
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", uptime: process.uptime() });
+  res.json({ status: "ok", message: "EmoAI backend vivo ✅" });
 });
 
-/* ==========================
-   "BASE DE DATOS" EN MEMORIA
-   ========================== */
-
-// En producción usarías MongoDB / Postgres, etc.
-const users = []; // { id, name, email, passwordHash, institution, avatarUrl, twoFactorEnabled, twoFactorCode, twoFactorCodeExpires, resetCode, resetCodeExpires }
+// =========================
+// "Base de datos" en memoria (solo demo)
+// =========================
+const users = []; // { id, name, email, passwordHash, institution, avatarUrl, twoFactorEnabled, twoFactorCode, ... }
 const checkins = []; // { id, userId, mood, note, createdAt }
 
-/* ==========================
-   UTILIDADES
-   ========================== */
-
+// =========================
+// Utilidades
+// =========================
 function createToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name },
@@ -86,9 +64,9 @@ function authMiddleware(req, res, next) {
   }
 }
 
-/* ==========================
-   AUTENTICACIÓN BÁSICA
-   ========================== */
+// ==========================
+// AUTENTICACIÓN BÁSICA
+// ==========================
 
 // Registro
 app.post("/auth/register", async (req, res) => {
@@ -181,8 +159,8 @@ app.post("/auth/login", async (req, res) => {
 // Verificar 2FA
 app.post("/auth/verify-2fa", (req, res) => {
   const { email, code } = req.body;
-
   const user = users.find((u) => u.email === email);
+
   if (!user || !user.twoFactorCode) {
     return res.status(400).json({ error: "Código inválido" });
   }
@@ -212,9 +190,9 @@ app.post("/auth/verify-2fa", (req, res) => {
   });
 });
 
-/* ==========================
-   OLVIDÉ MI CONTRASEÑA
-   ========================== */
+// ==========================
+// OLVIDÉ MI CONTRASEÑA
+// ==========================
 
 // Solicitar código de reseteo
 app.post("/auth/request-password-reset", (req, res) => {
@@ -266,9 +244,9 @@ app.post("/auth/reset-password", async (req, res) => {
   return res.json({ message: "Contraseña actualizada correctamente." });
 });
 
-/* ==========================
-   PERFIL + STATS
-   ========================== */
+// ==========================
+// PERFIL + STATS
+// ==========================
 
 app.get("/me", authMiddleware, (req, res) => {
   const user = users.find((u) => u.id === req.user.id);
@@ -285,7 +263,7 @@ app.get("/me", authMiddleware, (req, res) => {
 
   const stats = {
     totalCheckins,
-    averageMood: "😊", // podrías calcularlo real más adelante
+    averageMood: "😊", // demo; se podría calcular de verdad
     chatbotSessions: last7days.length > 0 ? 8 : 0, // demo
     streak: totalCheckins > 0 ? 5 : 0, // demo
   };
@@ -302,9 +280,9 @@ app.get("/me", authMiddleware, (req, res) => {
   });
 });
 
-/* ==========================
-   CHECK-INS
-   ========================== */
+// ==========================
+// CHECK-INS
+// ==========================
 
 app.post("/checkins", authMiddleware, (req, res) => {
   const { mood, note } = req.body;
@@ -329,9 +307,9 @@ app.get("/checkins", authMiddleware, (req, res) => {
   res.json({ checkins: userCheckins });
 });
 
-/* ==========================
-   CHATBOT SIMPLE
-   ========================== */
+// ==========================
+// CHATBOT SIMPLE
+// ==========================
 
 app.post("/chat", authMiddleware, (req, res) => {
   const { text } = req.body;
@@ -355,15 +333,11 @@ app.post("/chat", authMiddleware, (req, res) => {
       "Siento que te sientas ansioso/a 😔. La ansiedad es muy incómoda, pero no estás solo/a. " +
       "Puedes intentar enfocar tu atención en 5 cosas que ves, 4 que puedes tocar, 3 que puedes oír, 2 que puedes oler y 1 que puedas saborear. " +
       "¿Quieres que te acompañe con más ejercicios?";
-  }
-
-  if (lower.includes("triste") || lower.includes("deprimid")) {
+  } else if (lower.includes("triste") || lower.includes("deprimid")) {
     reply =
       "Lamento que te sientas triste 💜. A veces es importante permitirnos sentir esa tristeza sin juzgarnos. " +
       "Si te ayuda, puedes escribir qué es lo que más te pesa ahora mismo. Estoy aquí para leerte.";
-  }
-
-  if (lower.includes("feliz") || lower.includes("content")) {
+  } else if (lower.includes("feliz") || lower.includes("content")) {
     reply =
       "Me alegra mucho que te sientas bien 😄. Es valioso reconocer también los momentos positivos. " +
       "¿Hay algo que quieras celebrar o algo que haya salido bien hoy?";
@@ -372,9 +346,9 @@ app.post("/chat", authMiddleware, (req, res) => {
   res.json({ reply });
 });
 
-/* ==========================
-   ARRANCAR SERVIDOR
-   ========================== */
+// ==========================
+// ARRANCAR SERVIDOR
+// ==========================
 
 app.listen(PORT, () => {
   console.log(`API EmoAI escuchando en el puerto ${PORT}`);
