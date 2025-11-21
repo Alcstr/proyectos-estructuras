@@ -1,6 +1,5 @@
-// Cargar variables de entorno
+// server/index.js
 require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
@@ -8,32 +7,46 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 
-// ==========================
-// Configuración básica
-// ==========================
+/* ==========================
+   CONFIGURACIÓN BÁSICA
+   ========================== */
 
-// CORS: en producción ajusta CORS_ORIGIN en Render
+const PORT = process.env.PORT || 4000;
+const JWT_SECRET = process.env.JWT_SECRET || "super-secret-dev";
+
+// Si pones CORS_ORIGIN en Render, se usará eso.
+// Si no, permite todo (*) para pruebas.
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*";
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin: CORS_ORIGIN,
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-// Puerto y secreto JWT
-const PORT = process.env.PORT || 4000;
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+/* Rutas de prueba / salud */
+app.get("/", (req, res) => {
+  res.send("EmoAI API funcionando ✅");
+});
 
-// "Base de datos" en memoria (solo demo)
-// En producción usarías MongoDB/Postgres, etc.
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", uptime: process.uptime() });
+});
+
+/* ==========================
+   "BASE DE DATOS" EN MEMORIA
+   ========================== */
+
+// En producción usarías MongoDB / Postgres, etc.
 const users = []; // { id, name, email, passwordHash, institution, avatarUrl, twoFactorEnabled, twoFactorCode, twoFactorCodeExpires, resetCode, resetCodeExpires }
 const checkins = []; // { id, userId, mood, note, createdAt }
 
-// ==========================
-// Utilidades
-// ==========================
+/* ==========================
+   UTILIDADES
+   ========================== */
 
 function createToken(user) {
   return jwt.sign(
@@ -53,6 +66,7 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ error: "Token requerido" });
   }
   const token = auth.split(" ")[1];
+
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = payload;
@@ -95,6 +109,7 @@ app.post("/auth/register", async (req, res) => {
     resetCode: null,
     resetCodeExpires: null,
   };
+
   users.push(newUser);
 
   const token = createToken(newUser);
@@ -156,6 +171,7 @@ app.post("/auth/login", async (req, res) => {
 // Verificar 2FA
 app.post("/auth/verify-2fa", (req, res) => {
   const { email, code } = req.body;
+
   const user = users.find((u) => u.email === email);
   if (!user || !user.twoFactorCode) {
     return res.status(400).json({ error: "Código inválido" });
@@ -347,9 +363,9 @@ app.post("/chat", authMiddleware, (req, res) => {
 });
 
 /* ==========================
-   INICIAR SERVIDOR
+   ARRANCAR SERVIDOR
    ========================== */
 
 app.listen(PORT, () => {
-  console.log(`API EmoAI escuchando en http://localhost:${PORT}`);
+  console.log(`API EmoAI escuchando en el puerto ${PORT}`);
 });
