@@ -4,7 +4,14 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const app = express();
+const express = require("express");
+const cors = require("cors");
+
+app.use(express.json());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "*",
+  credentials: true,
+}));
 
 // Ajusta el origin cuando lo subas a producción (Vercel)
 app.use(
@@ -15,8 +22,10 @@ app.use(
 );
 app.use(express.json());
 
-const PORT = 4000;
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-demo";
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
+});
 
 // "Base de datos" en memoria (solo demo)
 // En producción usarías MongoDB/Postgres, etc.
