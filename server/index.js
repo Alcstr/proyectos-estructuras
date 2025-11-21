@@ -1,38 +1,37 @@
+// Carga variables de entorno (.env)
 require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const express = require("express");
-const cors = require("cors");
+const app = express();
 
+// Clave para JWT (en producción ponla en el .env)
+const JWT_SECRET = process.env.JWT_SECRET || "emoai-demo-secret";
+
+// Middlewares globales
 app.use(express.json());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
-  credentials: true,
-}));
-
-// Ajusta el origin cuando lo subas a producción (Vercel)
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CORS_ORIGIN || "*", // En Render ponás tu URL de Vercel
     credentials: true,
   })
 );
-app.use(express.json());
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-});
+// ==========================
+// "Base de datos" en memoria
+// ==========================
 
-// "Base de datos" en memoria (solo demo)
 // En producción usarías MongoDB/Postgres, etc.
 const users = []; // { id, name, email, passwordHash, institution, avatarUrl, twoFactorEnabled, twoFactorCode, twoFactorCodeExpires, resetCode, resetCodeExpires }
 const checkins = []; // { id, userId, mood, note, createdAt }
 
+// ==========================
 // Utilidades
+// ==========================
+
 function createToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name },
@@ -42,7 +41,8 @@ function createToken(user) {
 }
 
 function generateCode() {
-  return String(Math.floor(100000 + Math.random() * 900000)); // 6 dígitos
+  // Código de 6 dígitos
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 function authMiddleware(req, res, next) {
@@ -50,7 +50,9 @@ function authMiddleware(req, res, next) {
   if (!auth || !auth.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Token requerido" });
   }
+
   const token = auth.split(" ")[1];
+
   try {
     const payload = jwt.verify(token, JWT_SECRET);
     req.user = payload;
@@ -60,9 +62,9 @@ function authMiddleware(req, res, next) {
   }
 }
 
-/* ==========================
-   AUTENTICACIÓN BÁSICA
-   ========================== */
+// ==========================
+// AUTENTICACIÓN BÁSICA
+// ==========================
 
 // Registro
 app.post("/auth/register", async (req, res) => {
@@ -91,6 +93,7 @@ app.post("/auth/register", async (req, res) => {
     resetCode: null,
     resetCodeExpires: null,
   };
+
   users.push(newUser);
 
   const token = createToken(newUser);
@@ -153,6 +156,7 @@ app.post("/auth/login", async (req, res) => {
 app.post("/auth/verify-2fa", (req, res) => {
   const { email, code } = req.body;
   const user = users.find((u) => u.email === email);
+
   if (!user || !user.twoFactorCode) {
     return res.status(400).json({ error: "Código inválido" });
   }
@@ -182,9 +186,9 @@ app.post("/auth/verify-2fa", (req, res) => {
   });
 });
 
-/* ==========================
-   OLVIDÉ MI CONTRASEÑA
-   ========================== */
+// ==========================
+// OLVIDÉ MI CONTRASEÑA
+// ==========================
 
 // Solicitar código de reseteo
 app.post("/auth/request-password-reset", (req, res) => {
@@ -236,9 +240,9 @@ app.post("/auth/reset-password", async (req, res) => {
   return res.json({ message: "Contraseña actualizada correctamente." });
 });
 
-/* ==========================
-   PERFIL + STATS
-   ========================== */
+// ==========================
+// PERFIL + STATS
+// ==========================
 
 app.get("/me", authMiddleware, (req, res) => {
   const user = users.find((u) => u.id === req.user.id);
@@ -272,9 +276,9 @@ app.get("/me", authMiddleware, (req, res) => {
   });
 });
 
-/* ==========================
-   CHECK-INS
-   ========================== */
+// ==========================
+// CHECK-INS
+// ==========================
 
 app.post("/checkins", authMiddleware, (req, res) => {
   const { mood, note } = req.body;
@@ -299,9 +303,9 @@ app.get("/checkins", authMiddleware, (req, res) => {
   res.json({ checkins: userCheckins });
 });
 
-/* ==========================
-   CHATBOT SIMPLE
-   ========================== */
+// ==========================
+// CHATBOT SIMPLE
+// ==========================
 
 app.post("/chat", authMiddleware, (req, res) => {
   const { text } = req.body;
@@ -316,7 +320,11 @@ app.post("/chat", authMiddleware, (req, res) => {
 
   const lower = text.toLowerCase();
 
-  if (lower.includes("ansioso") || lower.includes("ansiosa") || lower.includes("ansiedad")) {
+  if (
+    lower.includes("ansioso") ||
+    lower.includes("ansiosa") ||
+    lower.includes("ansiedad")
+  ) {
     reply =
       "Siento que te sientas ansioso/a 😔. La ansiedad es muy incómoda, pero no estás solo/a. " +
       "Puedes intentar enfocar tu atención en 5 cosas que ves, 4 que puedes tocar, 3 que puedes oír, 2 que puedes oler y 1 que puedas saborear. " +
@@ -338,6 +346,11 @@ app.post("/chat", authMiddleware, (req, res) => {
   res.json({ reply });
 });
 
+// ==========================
+// ARRANQUE DEL SERVIDOR
+// ==========================
+
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`API EmoAI escuchando en http://localhost:${PORT}`);
+  console.log(`API EmoAI escuchando en el puerto ${PORT}`);
 });
