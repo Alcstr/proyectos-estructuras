@@ -189,6 +189,24 @@ app.post("/auth/verify-2fa", (req, res) => {
     },
   });
 });
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://proyectos-estructuraassss-50ahnl8rw-alejandros-projects-a194989f.vercel.app", // tu URL exacta
+  "https://proyectos-estructuras.vercel.app" // si tienes dominio custom, etc.
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // peticiones tipo curl/Postman
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("CORS blocked: origin not allowed"));
+  },
+  credentials: true,
+}));
+
+app.use(express.json());
 
 // ==========================
 // OLVIDÉ MI CONTRASEÑA
